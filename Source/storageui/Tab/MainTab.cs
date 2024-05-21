@@ -7,23 +7,36 @@ using System.Linq;
 
 namespace storageui.Tab
 {
-    public class StorageUIWindow : Window
+    public class MainTabWindow_StorageUI : MainTabWindow
     {
         private Vector2 scrollPosition = Vector2.zero;
         private List<(string, List<(Thing, int)>)> itemsInStorage;
+        private string currentFilter = "All"; // New field to store the current filter
 
-        public override Vector2 InitialSize => new Vector2(800f, 600f);
-
-        public StorageUIWindow()
+        public override Vector2 RequestedTabSize
         {
-            this.closeOnAccept = false;
-            this.closeOnCancel = false;
-            this.forcePause = true;
-            this.absorbInputAroundWindow = true;
-            this.doCloseX = true;
+            get
+            {
+                float width = 400f; // Set the width of the window here
+                float height = Screen.height - 35f; // Set the height to the screen height minus a small margin
+                return new Vector2(width, height);
+            }
+        }
 
-            // Collect items when the window is created
+        public override void PreOpen()
+        {
+            base.PreOpen();
+            UpdateItemsInStorage();
+        }
+        public override void WindowUpdate()
+        {
+            base.WindowUpdate();
+            UpdateItemsInStorage();
+        }
+        private void UpdateItemsInStorage()
+        {
             itemsInStorage = StorageHelper.GetItemsInStorage();
+            ApplyFilter(); // New method to apply the filter to the items
         }
 
         public override void DoWindowContents(Rect inRect)
@@ -31,11 +44,40 @@ namespace storageui.Tab
             // Title label
             Widgets.Label(new Rect(0, 0, inRect.width, 30), "Items in Storage");
 
+            // Filter button
+            if (Widgets.ButtonText(new Rect(inRect.width - 100, 0, 100, 30), "Filter"))
+            {
+                List<FloatMenuOption> options = new List<FloatMenuOption>
+                {
+                    new FloatMenuOption("Clear filter", () => currentFilter = ""),
+                    new FloatMenuOption("Filter by...", () =>
+                    {
+                        List<FloatMenuOption> filterOptions = new List<FloatMenuOption>
+                        {
+                            new FloatMenuOption("Weapons", () => currentFilter = "Weapons"),
+                            new FloatMenuOption("Apparel", () => currentFilter = "Apparel"),
+                            new FloatMenuOption("Food", () => currentFilter = "Food"),
+                            new FloatMenuOption("Medicine", () => currentFilter = "Medicine"),
+                            new FloatMenuOption("Organs and Implants", () => currentFilter = "Organs and Implants"),
+                            new FloatMenuOption("Resources", () => currentFilter = "Resources"),
+                            // Add more categories here
+                        };
+                        Find.WindowStack.Add(new FloatMenu(filterOptions));
+                    })
+                };
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+
             // Scroll view to display items
             Rect outRect = new Rect(0, 40, inRect.width, inRect.height - 80);
-            int totalStorages = itemsInStorage.Count;
-            Rect viewRect = new Rect(0, 0, inRect.width - 16, 
-                itemsInStorage.SelectMany(x => x.Item2).GroupBy(i => i.Item1.def).Count() * 30 + totalStorages * 30 + 40); // Change this line
+            int totalLines = itemsInStorage.Count; // One line for each storage label
+            foreach (var storage in itemsInStorage)
+            {
+                totalLines += storage.Item2.GroupBy(i => i.Item1.def).Count(); // One line for each grouped item
+                totalLines += storage.Item2.GroupBy(i => i.Item1.TryGetQuality(out QualityCategory qc) ? qc : (QualityCategory?)null).Count(); // One line for each quality category within a grouped item
+            }
+            float viewHeight = totalLines * 30 + 40;
+            Rect viewRect = new Rect(0, 0, inRect.width - 16, viewHeight);
 
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
 
@@ -91,28 +133,44 @@ namespace storageui.Tab
             }
         }
 
+        private void ApplyFilter()
+        {
+            if (!string.IsNullOrEmpty(currentFilter))
+            {
+                itemsInStorage = itemsInStorage
+                    .Select(s => (s.Item1, s.Item2.Where(i => IsItemInCategory(i.Item1)).ToList()))
+                    .Where(s => s.Item2.Count > 0)
+                    .ToList();
+            }
+        }
+
+        private bool IsItemInCategory(Thing item)
+        {
+            switch (currentFilter)
+            {
+                case "Weapons":
+                    return item.def.IsWeapon;
+                case "Apparel":
+                    return item.def.IsApparel;
+                case "Food":
+                    return item.def.IsNutritionGivingIngestible;
+                case "Medicine":
+                    return item.def.IsMedicine;
+                case "Resources":
+                    return item.def.IsStuff;
+                case "Organs and Implants":
+                    return item.def.category == ThingCategory.Item && item.def.thingCategories.Any(tc => tc.defName == "BodyPartsNatural" || tc.defName == "BodyPartsArtificial");
+                // Add more cases here for other categories
+                default:
+                    return true; // If the filter doesn't match any known category, don't filter the item
+            }
+        }
+
         public override void PostClose()
         {
             base.PostClose();
             Log.Message("Storage UI window closed");
             // Additional cleanup or logic here if needed
         }
-    }
-
-    public class MainTabWindow_StorageUI : MainTabWindow
-    {
-        public override void PreOpen()
-        {
-            base.PreOpen();
-            Log.Message("Storage UI tab clicked");
-            Find.WindowStack.Add(new StorageUIWindow());
-        }
-
-        public override void DoWindowContents(Rect canvas)
-        {
-            // You can leave this empty if you do not want to draw anything here
-        }
-
-        public override Vector2 RequestedTabSize => new Vector2(0f, 0f); // Hide the default tab window
     }
 }
