@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MainButtonDef>
+    <defName>StorageUITab</defName>
+    <label>Storage UI</label>
+    <description>Your Tab Description</description>
+    <tabWindowClass>storageui.Tab.MainTabWindow_StorageUI</tabWindowClass>
+    <iconPath>UI/Buttons/MainButtons/StorageUI</iconPath>
+    <order>100</order>
+  </MainButtonDef>
+</Defs>

@@ -1,0 +1,20 @@
+﻿using RimWorld;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
+using Verse;
+
+namespace storageui
+{
+    [StaticConstructorOnStartup]
+    static class StaticConstructorOnGameStart
+    {
+        static StaticConstructorOnGameStart()
+        {
+            Log.Message("StorageUI loaded");
+        }
+    }
+}

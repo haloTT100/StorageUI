@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+    <name>Storage UI</name>
+    <author>haloTT100</author>
+    <packageId>halott100.storageui</packageId>
+    <modVersion IgnoreIfNoMatchingField="True">1.0</modVersion>
+    <description>
+        Your mod description goes here.
+    </description>
+    <supportedVersions>
+        <li>1.5</li>
+    </supportedVersions>
+    <loadAfter>
+		<li>brrainz.harmony</li>
+    </loadAfter>
+    <modDependencies>
+        <!-- Add any mod dependencies here -->
+    </modDependencies>
+</ModMetaData>
