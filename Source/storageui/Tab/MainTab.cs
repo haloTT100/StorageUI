@@ -11,6 +11,7 @@ namespace storageui.Tab
     {
         private Vector2 scrollPosition = Vector2.zero;
         private List<(string, List<(Thing, int)>)> itemsInStorage;
+        private Dictionary<ThingDef, int> currentIndices = new Dictionary<ThingDef, int>();
         private string currentFilter = "All"; // New field to store the current filter
 
         public override Vector2 RequestedTabSize
@@ -113,12 +114,23 @@ namespace storageui.Tab
                     {
                         Widgets.DrawHighlight(labelRect);
                     }
-
+                    
                     // Pan the camera to the item when it is clicked
                     if (Widgets.ButtonInvisible(labelRect))
                     {
-                        Thing firstThing = groupedItems.First().Item1;
-                        Find.CameraDriver.JumpToCurrentMapLoc(firstThing.Position);
+                        if (!currentIndices.ContainsKey(itemDef))
+                        {
+                            currentIndices[itemDef] = 0;
+                        }
+
+                        List<Thing> things = groupedItems.Select(i => i.Item1).ToList();
+                        Thing thingToSelect = things[currentIndices[itemDef]];
+                        Find.CameraDriver.JumpToCurrentMapLoc(thingToSelect.Position);
+                        Find.Selector.ClearSelection(); // Clear the current selection
+                        Find.Selector.Select(thingToSelect); // Select the item
+
+                        // Increment the index for this item, wrapping around to 0 if it's at the end of the list
+                        currentIndices[itemDef] = (currentIndices[itemDef] + 1) % things.Count;
                     }
 
                     y += 30;

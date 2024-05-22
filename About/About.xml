@@ -12,6 +12,7 @@
     </supportedVersions>
     <loadAfter>
 		<li>brrainz.harmony</li>
+        <li>lwm.deepstorage</li>
     </loadAfter>
     <modDependencies>
         <!-- Add any mod dependencies here -->
